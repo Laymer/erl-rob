@@ -11,17 +11,25 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_Type, _Args) ->
-    %{ok, Supervisor} = helloworld_sup:start_link(),
+    {ok, Supervisor} = helloworld_sup:start_link(),
     %application:start(grisp),
-    %motorcontroller:handle_call({set1, 2500}, [], {state, {timers, undef,undef,undef,undef}, {speeds, 0,0,0,0}, 0.0,0.0,0.0}),
-    {ok, Pid} = gen_server:start_link({local, motorcontroller}, motorcontroller, [], []),
-    io:format("server started"),
-    gen_server:call(motorcontroller, {set1, 500}),
-    io:format("set1 called"),
+    %LEDs = [1, 2],
+    %[grisp_led:flash(L, red, 250) || L <- LEDs],
+    %grisp_led:off(2),
+    %grisp_led:off(1),
+    %timer:sleep(1500),
+    {ok, MPid} = gen_server:start_link({local, motorcontroller}, motorcontroller, [], []),
+    %gen_server:call(motorcontroller, {set1, 750}),
+    %timer:sleep(10000),
+    {ok, Pid} = gen_server:start_link({local, motioncontroller}, motioncontroller, [], []),
+    gen_server:call(motioncontroller, {speed, 1500}),
+    gen_server:call(motioncontroller, {direction, 90}),
+    gen_server:call(motioncontroller, {apply, dummy}),
     %gen_server:cast(motorcontroller, stop),
-    blink(),
-    io:format("blink done").
-    %{ok, Supervisor}.
+    %blink(),
+    %io:format("blink done"),
+    loop(),
+    {ok, Supervisor}.
 
 blink() ->
     LEDs = [1, 2],
@@ -31,14 +39,8 @@ blink() ->
     Random = fun() ->
         {rand:uniform(2) - 1, rand:uniform(2) -1, rand:uniform(2) - 1}
              end,
-    grisp_led:pattern(2, [{250, Random}]),
-    blink2().
-blink2() ->
-    Random = fun() ->
-        {rand:uniform(2) - 1, rand:uniform(2) -1, rand:uniform(2) - 1}
-             end,
-    grisp_led:pattern(2, [{250, Random}]),
+    grisp_led:pattern(2, [{250, Random}]).
+loop() ->
     timer:sleep(15000),
-    timer:sleep(15000),
-    blink2().
+    loop().
 stop(_State) -> ok.
