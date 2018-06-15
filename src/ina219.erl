@@ -27,7 +27,7 @@
 -define(INA_CAL_VALUE, 4096). %magic value, sets to 32V, 2A
 
 %% API
--export([setup/0, get_voltage/0, get_current/0]).
+-export([setup/0, get_voltage/0, get_current/0, get_power/0]).
 
 setup()->
   write_register(?INA219_REG_CALIBRATION, ?INA_CAL_VALUE),
@@ -36,14 +36,19 @@ setup()->
   CFGVal.
 
 get_voltage()->
-  <<CH:8, CL:8>> = read_register(?INA219_REG_VOLTAGE),
+  <<CL:8, CH:8>> = read_register(?INA219_REG_VOLTAGE),
   <<C:13/little-signed-integer, _:3>> = <<CH:8, CL:8>>,
   C*4/1000. %/8000*32
 
 get_current()->
-  <<CH:8, CL:8>> = read_register(?INA219_REG_CURRENT),
+  <<CL:8, CH:8>> = read_register(?INA219_REG_CURRENT),
   <<_:1, C:15/little-signed-integer>> = <<CH:8, CL:8>>,
   C/10.%100uV per mA
+
+get_power()->
+  <<CL:8, CH:8>> = read_register(?INA219_REG_POWER),
+  <<C:16/little-signed-integer>> = <<CH:8, CL:8>>,
+  C*2. %milliwatts
 
 write_register(Reg, Val)->
   <<Valh:8, Vall:8>> = <<Val:16>>,
