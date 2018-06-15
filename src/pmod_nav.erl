@@ -65,7 +65,7 @@
 
 
 %% API
--export([verify/1, setup/1, verifyConfig/1, readAcc/1, readGy/1, readAccScaled/1]).
+-export([verify/1, setup/1, verifyConfig/1, readAcc/1, readGy/1, readAccScaled/1, readGyScaled/1]).
 
 verify(Slot) ->
   <<"h">> = grisp_spi:send_recv(Slot, #{cpol => low, cpha => leading}, <<2#1:1, 2#0001111:7>>, 1, 1).
@@ -115,3 +115,6 @@ readGy(Slot) ->
   <<BZ:8>> = grisp_spi:send_recv(Slot, #{cpol => low, cpha => leading}, <<2#1:1, ?GYZ_REGH:7>>, 1, 1),
   <<Z:16/little-signed-integer>> = <<AZ, BZ>>,
   {X, Y, Z}.
+readGyScaled(Slot) ->
+  {X, Y, Z} = readGy(Slot),
+  {X/16#8000*254, Y/16#8000*254, Z/16#8000*254}. %scale to 1dps+1. default scale: +-max=254dps
