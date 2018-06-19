@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 15. Jun 2018 17:46
 %%%-------------------------------------------------------------------
--module(pmod_nav).
+-module(pmod_nav2).
 -author("Leon Wehmeier").
 %Note: ACC and Gyro only
 -define(ACCX_REGL, 16#28).

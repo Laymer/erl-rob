@@ -8,6 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(motorcontroller).
 -author("Leon Wehmeier").
+-define(MIN_TICK_MS, 10).
+-define(MAX_TICK_MS, 1010).
 
 -behavior(gen_server).
 %% API
@@ -112,14 +114,11 @@ cancel_timer(undef) -> {ok};
 cancel_timer(Tref) -> timer:cancel(Tref), ok.
 
 set_speed(Motor, 0) -> io:format("set_speed 0 called\r\n"), -1;
-set_speed(front_right, Speed) when Speed > 0 -> io:format("set_speed fwd fr called\r\n"),
-  grisp_gpio:set(led1_b),
-  Speed;
-set_speed(front_right, Speed) when Speed < 0 -> io:format("set_speed bwd fr called\r\n"),
-  grisp_gpio:clear(led1_b),
-  -Speed;
-set_speed(Motor, Speed) when Speed < 0 -> io:format("set_speed negative called\r\n"), -Speed;
-set_speed(Motor, Speed) when Speed > 0 -> io:format("set_speed fwd called\r\n"), Speed.
+set_speed(Motor, Speed) when Speed < 0 -> set_direction(Motor, true), -(Speed*(?MAX_TICK_MS-?MIN_TICK_MS)/100)+?MIN_TICK_MS;
+set_speed(Motor, Speed) when Speed > 0 -> set_direction(Motor, false), (Speed*(?MAX_TICK_MS-?MIN_TICK_MS)/100)+?MIN_TICK_MS.
+
+set_direction(Motor, true) -> io:format("motor dir fw\r\n");
+set_direction(Motor, false) -> io:format("motor dir bw\r\n").
 
 generateTick(Pin) ->
                     case grisp_gpio:get(Pin) of

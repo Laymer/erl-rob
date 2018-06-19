@@ -12,6 +12,7 @@
 
 start(_Type, _Args) ->
     {ok, Supervisor} = helloworld_sup:start_link(),
+    loop(),
     %application:start(grisp),
     %LEDs = [1, 2],
     %[grisp_led:flash(L, red, 250) || L <- LEDs],

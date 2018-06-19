@@ -52,6 +52,6 @@ get_power()->
 
 write_register(Reg, Val)->
   <<Valh:8, Vall:8>> = <<Val:16>>,
-  grisp_i2c:msgs([16#40, {write, <<Reg:8, Valh:8, Vall:8>>}]).
+  grisp_i2c_custom:msgs([16#40, {write, <<Reg:8, Valh:8, Vall:8>>}]).
 read_register(Reg)->
-  grisp_i2c:msgs([16#40, {write, <<Reg:8>>}, {read, 2, ?I2C_M_RD}]).
+  grisp_i2c_custom:msgs([16#40, {write, <<Reg:8>>}, {read, 2, ?I2C_M_RD}]).

@@ -1,4 +1,4 @@
--module(grisp_i2c).
+-module(grisp_i2c_custom).
 
 -behavior(gen_server).
 
