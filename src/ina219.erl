@@ -12,7 +12,7 @@
 -define(INA219_ADDR, 16#40).
 -define(I2C_M_RD, 16#0001).
 
--define(INA219_REG_CALIBRATION, 16#5).
+-define(INA219_REG_CALIBRATION, 5).
 -define(INA219_REG_CONFIG, 0).
 -define(INA219_REG_VOLTAGE, 2).
 -define(INA219_REG_POWER, 3).
@@ -41,8 +41,8 @@ get_voltage()->
   C*4/1000. %/8000*32
 
 get_current()->
-  <<CL:8, CH:8>> = read_register(?INA219_REG_CURRENT),
-  <<_:1, C:15/little-signed-integer>> = <<CH:8, CL:8>>,
+  <<_:1, CL:7, CH:8>> = read_register(?INA219_REG_CURRENT),
+  <<C:15/little-signed-integer>> = <<CH:8, CL:7>>,
   C/10.%100uV per mA
 
 get_power()->
@@ -52,6 +52,6 @@ get_power()->
 
 write_register(Reg, Val)->
   <<Valh:8, Vall:8>> = <<Val:16>>,
-  grisp_i2c_custom:msgs([16#40, {write, <<Reg:8, Valh:8, Vall:8>>}]).
+  grisp_i2c:msgs([16#40, {write, <<Reg:8, Valh:8, Vall:8>>}]).
 read_register(Reg)->
-  grisp_i2c_custom:msgs([16#40, {write, <<Reg:8>>}, {read, 2, ?I2C_M_RD}]).
+  grisp_i2c:msgs([16#40, {write, <<Reg:8>>}, {read, 2, ?I2C_M_RD}]).
