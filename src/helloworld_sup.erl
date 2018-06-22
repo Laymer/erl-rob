@@ -12,7 +12,10 @@
 
 %--- API -----------------------------------------------------------------------
 
-start_link() -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link() ->
+  Children = [
+    ],
+  supervisor:start_link({local, ?MODULE}, ?MODULE, Children).
 
 %--- Callbacks -----------------------------------------------------------------
 

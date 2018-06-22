@@ -26,8 +26,41 @@
 
 -define(INA_CAL_VALUE, 4096). %magic value, sets to 32V, 2A
 
+
+% Callbacks
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([code_change/3]).
+-export([terminate/2]).
 %% API
 -export([setup/0, get_voltage/0, get_current/0, get_power/0]).
+
+
+% @private
+start_link() -> gen_server:start_link(?MODULE, [], []).
+
+
+init(_Args) ->
+  process_flag(trap_exit, true),
+  setup(),
+  {ok, #{init => true}}.
+handle_call(Call, _From, State) ->
+  try execute_call(Call, State)
+  catch throw:Reason -> {reply, {error, Reason}, State}
+  end.
+handle_cast(Request, _State) -> error({unknown_cast, Request}).
+handle_info(Info, _State) -> error({unknown_info, Info}).
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
+terminate(_Reason, #{slot := Slot}) -> io:format("ina219 termination requested\r\n").
+
+execute_call(get_voltage, State)->
+  {reply, get_voltage(), State};
+execute_call(get_current, State)->
+  {reply, get_current(), State};
+execute_call(get_power, State)->
+  {reply, get_power(), State}.
 
 setup()->
   write_register(?INA219_REG_CALIBRATION, ?INA_CAL_VALUE),

@@ -64,13 +64,53 @@
 -define(HPIS_XL, 2#0).%disable high-pass
 
 
+% Callbacks
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([code_change/3]).
+-export([terminate/2]).
 %% API
 -export([verify/1, setup/1, verifyConfig/1, readAcc/1, readGy/1, readAccScaled/1, readGyScaled/1]).
 
+
+
+% @private
+start_link(Slot) -> gen_server:start_link(?MODULE, [Slot], []).
+
+% @private
+init(spi1) ->
+  process_flag(trap_exit, true),
+  State = #{
+    slot => spi1
+  },
+  verify(spi1),
+  setup(spi1),
+  verifyConfig(spi1),
+  {ok, State};
+init(Slot) ->
+  error({incompatible_slot, Slot}).
+handle_call(Call, _From, State) ->
+  try execute_call(Call, State)
+  catch throw:Reason -> {reply, {error, Reason}, State}
+  end.
+handle_cast(Request, _State) -> error({unknown_cast, Request}).
+handle_info(Info, _State) -> error({unknown_info, Info}).
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
+terminate(_Reason, #{slot := Slot}) -> io:format("pmod_nav2 termination requested\r\n").
+
+execute_call(getAcc, State)->
+  #{slot := Slot} = State,
+  Data = readAccScaled(Slot),
+  {reply, Data, State};
+execute_call(getGy, State)->
+  #{slot := Slot} = State,
+  Data = readGyScaled(Slot),
+  {reply, Data, State}.
+
 verify(Slot) ->
   <<"h">> = grisp_spi:send_recv(Slot, #{cpol => low, cpha => leading}, <<2#1:1, 2#0001111:7>>, 1, 1).
-
-
 setup(Slot) ->
   setupAcc(Slot),
   setupGy(Slot).
