@@ -1,7 +1,7 @@
 %--- Erlang Inet Configuration -------------------------------------------------
 
 % Add hosts
-{host, {192,168,100,2}, ["DESKTOP-T7GSN6C"]}.
+{host, {10,0,1,4}, ["X1"]}.
 
 % Do not monitor the hosts file
 {hosts_file, ""}.

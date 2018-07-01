@@ -25,7 +25,8 @@ start_link(DriverMod) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, DriverMod, []).
 
 
-get(Pin) -> gen_server:call(?MODULE, {command, <<(index(Pin)):8, 2:8>>}).
+get(Pin) -> <<V_l:8, V_h:8>> = gen_server:call(?MODULE, {command, <<(index(Pin)):8, 2:8>>}),
+	    <<Voltage:16/unsigned>> = <<V_h:8, V_l:8>>, Voltage.
 
 
 %--- Callbacks -----------------------------------------------------------------
