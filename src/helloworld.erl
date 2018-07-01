@@ -12,7 +12,7 @@
 
 start(_Type, _Args) ->
     {ok, Supervisor} = helloworld_sup:start_link(),
-    loop(),
+    sleepForever(),
     %application:start(grisp),
     %LEDs = [1, 2],
     %[grisp_led:flash(L, red, 250) || L <- LEDs],
@@ -25,6 +25,7 @@ start(_Type, _Args) ->
     {ok, _} = gen_server:start_link({local, motioncontroller}, motioncontroller, [], []),
     {ok, _} = gen_server:start_link({local, pmod_nav2}, pmod_nav2, spi1, []),
     {ok, _} = gen_server:start_link({local, ina219}, ina219, [], []),
+    {ok, _} = gen_server:start_link({local, vl6180x}, vl6180x, [], []),
     gen_server:call(motioncontroller, {speed, 1500}),
     gen_server:call(motioncontroller, {direction, 90}),
     gen_server:call(motioncontroller, {apply, dummy}),
@@ -34,6 +35,9 @@ start(_Type, _Args) ->
     loop(),
     {ok, Supervisor}.
 
+sleepForever()->
+    timer:sleep(5000),
+    sleepForever().
 blink() ->
     LEDs = [1, 2],
     [grisp_led:flash(L, red, 250) || L <- LEDs],
