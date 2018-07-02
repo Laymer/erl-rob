@@ -25,7 +25,7 @@ start(_Type, _Args) ->
     {ok, _} = gen_server:start_link({local, motioncontroller}, motioncontroller, [], []),
     {ok, _} = gen_server:start_link({local, pmod_nav2}, pmod_nav2, spi1, []),
     {ok, _} = gen_server:start_link({local, ina219}, ina219, [], []),
-    {ok, _} = gen_server:start_link({local, vl6180x}, vl6180x, [], []),
+    {ok, _} = gen_server:start_link({local, vl6180x}, vl6180x, 16#28, []),
     gen_server:call(motioncontroller, {speed, 1500}),
     gen_server:call(motioncontroller, {direction, 90}),
     gen_server:call(motioncontroller, {apply, dummy}),

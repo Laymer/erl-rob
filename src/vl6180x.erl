@@ -39,11 +39,12 @@
 
 
 start_link() -> gen_server:start_link(?MODULE, [], []).
-init(_Args) ->
+init(I2CAddr) ->
   process_flag(trap_exit, true),
   initVL(),
   startContinous(),
-  {ok, #{init => true}}.
+  setAddr(I2CAddr),
+  {ok, #{init => true, addr=>I2CAddr}}.
 handle_call(Call, _From, State) ->
   try execute_call(Call, State)
   catch throw:Reason -> {reply, {error, Reason}, State}
@@ -54,10 +55,8 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_Reason, #{slot := Slot}) -> io:format("ina219 termination requested\r\n").
 
 execute_call(get_distance, State)->
-  {reply, readRange(16#29), State}.
-
-
-
+  #{addr:=Addr} = State,
+  {reply, readRange(Addr), State}.
 
 
 
