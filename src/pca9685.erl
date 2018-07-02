@@ -10,8 +10,9 @@
 -author("Leon Wehmeier").
 
 
--define(PCA9685_MODE1, 16#16).
--define(PCA9685_PRESCALE, 16#18).
+-define(PCA9685_MODE1, 16#0).
+-define(PCA9685_MODE2, 16#01).
+-define(PCA9685_PRESCALE, 16#fe).
 -define(LED0_ON_L, 16#06).
 -define(I2C_M_RD, 16#0001).
 
@@ -56,12 +57,13 @@ writeReg32(Addr, Reg, Data) ->
 writeReg8(Addr, Reg, Data) ->
   grisp_i2c:msgs([Addr, {write, <<Reg:8, Data:8>>}]).
 readReg8(Addr, Reg) ->
-  grisp_i2c:msgs([Addr, {write, <<Reg:8>>}, {read, 1, ?I2C_M_RD}]).
+  grisp_i2c:msgs([Addr, {write, <<Reg:8>>}]),
+  grisp_i2c:msgs([Addr, {read, 1, ?I2C_M_RD}]).
 
 setPWMFreq(Addr, Val) ->
   Freq = 0.9 * Val,
   Prescaleval = round(25000000 / 4096 / Freq - 1),
-  Oldmode = readReg8(Addr, ?PCA9685_MODE1),
+  <<Oldmode:8>> = readReg8(Addr, ?PCA9685_MODE1),
   Newmode = (Oldmode band 16#7F) bor 16#10, % sleep
   writeReg8(Addr, ?PCA9685_MODE1, Newmode),
   writeReg8(Addr,?PCA9685_PRESCALE, Prescaleval),% set the prescaler
@@ -69,15 +71,16 @@ setPWMFreq(Addr, Val) ->
   writeReg8(Addr, ?PCA9685_MODE1, Oldmode bor 16#a0). %This sets the MODE1 register to turn on auto increment.
 
 initPCA(Addr)->
-  writeReg8(Addr, ?PCA9685_MODE1, 16#80),
-  setPWMFreq(Addr, 1000).
+  grisp_i2c:msgs([Addr, {write, <<6:8>>}]),
+  writeReg8(Addr, ?PCA9685_MODE1, 16#A0),
+  writeReg8(Addr, ?PCA9685_MODE2, 16#0C).
 
 setPin(Addr, Pin, high)->
-  <<Val:32>> = <<4096:16, 0:16>>,
+  <<Val:32>> = <<16#00100000:32>>,
   writeReg32(Addr, ?LED0_ON_L+4*Pin, Val);
 setPin(Addr, Pin, low)->
-  <<Val:32>> = <<0:16, 4096:16>>,
+  <<Val:32>> = <<16#00000010:32>>,
   writeReg32(Addr, ?LED0_ON_L+4*Pin, Val).
 setPWM(Addr, Pin, PWMVal)->
-  <<Val:32>> = <<0:16, PWMVal:16>>,
+  <<Val:32>> = <<0:16, PWMVal:16/little>>,
   writeReg32(Addr, ?LED0_ON_L+4*Pin, Val).
