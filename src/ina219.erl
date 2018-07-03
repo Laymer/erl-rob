@@ -35,17 +35,17 @@
 -export([code_change/3]).
 -export([terminate/2]).
 %% API
--export([setup/0, get_voltage/0, get_current/0, get_power/0]).
+-export([setup/1, get_voltage/1, get_current/1, get_power/1]).
 
 
 % @private
 start_link() -> gen_server:start_link(?MODULE, [], []).
 
 
-init(_Args) ->
+init(I2CAddr) ->
   process_flag(trap_exit, true),
-  setup(),
-  {ok, #{init => true}}.
+  setup(I2CAddr),
+  {ok, #{init => true, addr=> I2CAddr}}.
 handle_call(Call, _From, State) ->
   try execute_call(Call, State)
   catch throw:Reason -> {reply, {error, Reason}, State}
@@ -56,35 +56,38 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_Reason, #{slot := Slot}) -> io:format("ina219 termination requested\r\n").
 
 execute_call(get_voltage, State)->
-  {reply, get_voltage(), State};
+  #{addr:=Addr} = State,
+  {reply, get_voltage(Addr), State};
 execute_call(get_current, State)->
-  {reply, get_current(), State};
+  #{addr:=Addr}=State,
+  {reply, get_current(Addr), State};
 execute_call(get_power, State)->
-  {reply, get_power(), State}.
+  #{addr:= Addr} = State,
+  {reply, get_power(Addr), State}.
 
-setup()->
-  write_register(?INA219_REG_CALIBRATION, ?INA_CAL_VALUE),
+setup(Addr)->
+  write_register(Addr, ?INA219_REG_CALIBRATION, ?INA_CAL_VALUE),
   <<CFGVal:16>> = <<0:2, ?BRNG:1, ?PGA:2, ?BADC:4, ?SADC:4, ?MODE:3>>,
-  write_register(?INA219_REG_CONFIG, CFGVal),
+  write_register(Addr, ?INA219_REG_CONFIG, CFGVal),
   CFGVal.
 
-get_voltage()->
-  <<CL:8, CH:8>> = read_register(?INA219_REG_VOLTAGE),
+get_voltage(Addr)->
+  <<CL:8, CH:8>> = read_register(Addr, ?INA219_REG_VOLTAGE),
   <<C:13/little-signed-integer, _:3>> = <<CH:8, CL:8>>,
   C*4/1000. %/8000*32
 
-get_current()->
-  <<_:1, CL:7, CH:8>> = read_register(?INA219_REG_CURRENT),
+get_current(Addr)->
+  <<_:1, CL:7, CH:8>> = read_register(Addr, ?INA219_REG_CURRENT),
   <<C:15/little-signed-integer>> = <<CH:8, CL:7>>,
   C/10.%100uV per mA
 
-get_power()->
-  <<CL:8, CH:8>> = read_register(?INA219_REG_POWER),
+get_power(Addr)->
+  <<CL:8, CH:8>> = read_register(Addr, ?INA219_REG_POWER),
   <<C:16/little-signed-integer>> = <<CH:8, CL:8>>,
   C*2. %milliwatts
 
-write_register(Reg, Val)->
+write_register(Addr, Reg, Val)->
   <<Valh:8, Vall:8>> = <<Val:16>>,
-  grisp_i2c:msgs([16#40, {write, <<Reg:8, Valh:8, Vall:8>>}]).
-read_register(Reg)->
-  grisp_i2c:msgs([16#40, {write, <<Reg:8>>}, {read, 2, ?I2C_M_RD}]).
+  grisp_i2c:msgs([Addr, {write, <<Reg:8, Valh:8, Vall:8>>}]).
+read_register(Addr, Reg)->
+  grisp_i2c:msgs([Addr, {write, <<Reg:8>>}, {read, 2, ?I2C_M_RD}]).
