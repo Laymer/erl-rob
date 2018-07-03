@@ -36,7 +36,7 @@
 -define(BW_G, 2#11). %cutoff 16
 -define(FS_G, 2#00). %full-scale:245dps
 -define(INT_SEL, 2#00).
--define(OUT_SEL, 2#00).
+-define(OUT_SEL, 2#10).
 -define(LP_MODE, 2#0).
 -define(HP_EN, 2#0).
 -define(HPCF_G, 2#0000).
