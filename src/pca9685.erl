@@ -24,11 +24,10 @@
 -export([handle_info/2]).
 -export([code_change/3]).
 -export([terminate/2]).
-%% API
--export([initPCA/1, writeReg8/3, readReg8/2, writeReg16/3, setPin/3, setPWM/3]).
+%% debug
+% -export([initPCA/1, writeReg8/3, readReg8/2, writeReg16/3, setPin/3, setPWM/3]).
 
 
-start_link() -> gen_server:start_link(?MODULE, [], []).
 init(I2CAddr) ->
   process_flag(trap_exit, true),
   initPCA(I2CAddr),
