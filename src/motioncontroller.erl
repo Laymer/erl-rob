@@ -65,6 +65,7 @@ calc_motorSpeeds(Direction, Speed)  ->
   M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4),
   M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4),
   M4 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4),
+  io:format("speeds: ~p~n", {M1, M2, M3, M4}),
   {M1, M2, M3, M4}.
 
 set_motors({M1, M2, M3, M4})->
