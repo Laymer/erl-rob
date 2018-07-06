@@ -85,11 +85,11 @@ set_speed(Motor, 0) ->
 set_speed(Motor, Speed) when Speed < 0 ->
   set_direction(Motor, true),
   Intrvl = -(Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
-  set_pwm(Motor, Intrvl);
+  set_pwm(Motor, round(Intrvl));
 set_speed(Motor, Speed) when Speed > 0 ->
   set_direction(Motor, true),
   Intrvl = (Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
-  set_pwm(Motor, Intrvl).
+  set_pwm(Motor, round(Intrvl)).
 
 set_pwm(Motor, 0) ->
   {PWM, _, _} = get_pin_map(Motor),
@@ -144,7 +144,7 @@ setup() ->
   ok.
 
 % pwm pin, enable pin, dir pin
-get_pin_map(front_left) -> {0, 4, 5};
-get_pin_map(rear_left) -> {1, 6, 7};
+get_pin_map(rear_left) -> {0, 4, 5};
+get_pin_map(front_left) -> {1, 6, 7};
 get_pin_map(front_right) -> {2, 8, 9};
 get_pin_map(rear_right) -> {3, 10, 11}.
