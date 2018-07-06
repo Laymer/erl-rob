@@ -25,7 +25,7 @@
 -export([code_change/3]).
 -export([terminate/2]).
 %% debug
-% -export([initPCA/1, writeReg8/3, readReg8/2, writeReg16/3, setPin/3, setPWM/3]).
+-export([initPCA/1, writeReg8/3, readReg8/2, writeReg16/3, setPin/3, setPWM/3]).
 
 
 init(I2CAddr) ->
