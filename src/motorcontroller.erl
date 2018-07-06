@@ -115,28 +115,28 @@ disable_motor(Motor) ->
   {_, Enable, _} = get_pin_map(Motor),
   gen_server:call(pwmController, {set_off, Enable}).
 
-set_direction(front_left, true) ->
-  {_, _, Dir} = get_pin_map(front_left),
-  gen_server:call(pwmController, {set_on, Dir});
 set_direction(front_left, false) ->
   {_, _, Dir} = get_pin_map(front_left),
-  gen_server:call(pwmController, {set_off, Dir});
-set_direction(rear_left, true) ->
-  {_, _, Dir} = get_pin_map(rear_left),
   gen_server:call(pwmController, {set_on, Dir});
+set_direction(front_left, true) ->
+  {_, _, Dir} = get_pin_map(front_left),
+  gen_server:call(pwmController, {set_off, Dir});
 set_direction(rear_left, false) ->
   {_, _, Dir} = get_pin_map(rear_left),
+  gen_server:call(pwmController, {set_on, Dir});
+set_direction(rear_left, true) ->
+  {_, _, Dir} = get_pin_map(rear_left),
   gen_server:call(pwmController, {set_off, Dir});
-set_direction(front_right, true) ->
+set_direction(front_right, false) ->
   {_, _, Dir} = get_pin_map(front_right),
   gen_server:call(pwmController, {set_off, Dir});
 set_direction(front_right, true) ->
   {_, _, Dir} = get_pin_map(front_right),
   gen_server:call(pwmController, {set_on, Dir});
-set_direction(rear_right, true) ->
+set_direction(rear_right, false) ->
   {_, _, Dir} = get_pin_map(rear_right),
   gen_server:call(pwmController, {set_off, Dir});
-set_direction(rear_right, false) ->
+set_direction(rear_right, true) ->
   {_, _, Dir} = get_pin_map(rear_right),
   gen_server:call(pwmController, {set_on, Dir}).
 
