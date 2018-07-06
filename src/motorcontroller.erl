@@ -8,30 +8,22 @@
 %%%-------------------------------------------------------------------
 -module(motorcontroller).
 -author("Leon Wehmeier").
--define(MIN_TICK_MS, 10).
--define(MAX_TICK_MS, 1010).
+-define(MIN_TICK_US, 1000).
+-define(MAX_TICK_US, 101000).
 
 -behavior(gen_server).
 %% API
--export([set_speed/2, setup/0, generateTick/1]).
+-export([set_speed/2, setup/0]).
 -export([init/1, handle_call/3, handle_cast/2, stop/0]).
 
--record(timers, {
-  m1            :: timer:tref(),
-  m2            :: timer:tref(),
-  m3            :: timer:tref(),
-  m4            :: timer:tref()
-}).
 -record(speeds, {
   m1=0            :: non_neg_integer(),
   m2=0            :: non_neg_integer(),
   m3=0            :: non_neg_integer(),
   m4=0            :: non_neg_integer()
 }).
--type timers() :: #timers{}.
 -type speeds() :: #speeds{}.
 -record(state, {
-  trefs=#timers{}            :: timers(),
   motor_speeds=#speeds{}            :: speeds()
 }).
 
@@ -50,93 +42,109 @@ handle_call(_Request, _From, State) ->
 handle_cast(stop, State) ->
   {stop, normal, State}.
 terminate(normal, State) ->
-  cancel_timer(State#state.trefs#timers.m1),
-  cancel_timer(State#state.trefs#timers.m2),
-  cancel_timer(State#state.trefs#timers.m3),
-  cancel_timer(State#state.trefs#timers.m4),
+  set_speed(front_left, 0),
+  set_speed(front_right, 0),
+  set_speed(rear_right, 0),
+  set_speed(rear_left, 0),
   ok.
 
-%TODO: refactor to use case on motor
-handle_update(set1, Param, State) ->
-  io:format("updating motor FL speed\r\n"),
+handle_update(front_left, Param, State) ->
   M_speeds = State#state.motor_speeds,
   New_mspeeds = M_speeds#speeds{m1 = Param},
-  M_trefs = State#state.trefs,
-  cancel_timer(M_trefs#timers.m1),
   Intrvl = set_speed(front_left, Param),
-  case timer:apply_interval(Intrvl, motorcontroller, generateTick, [get_pin_map(front_left)]) of
-    {ok, Tref} -> New_trefs = M_trefs#timers{m1 = Tref};
-    {error, badarg} -> New_trefs = M_trefs#timers{m1 = undef}
-  end,
-  New_state = State#state{motor_speeds = New_mspeeds, trefs = New_trefs},
+  New_state = State#state{motor_speeds = New_mspeeds},
   {reply, ok, New_state};
-handle_update(set2, Param, State) ->
-  io:format("updating motor FR speed\r\n"),
+handle_update(front_right, Param, State) ->
   M_speeds = State#state.motor_speeds,
   New_mspeeds = M_speeds#speeds{m2 = Param},
-  M_trefs = State#state.trefs,
-  cancel_timer(M_trefs#timers.m2),
   Intrvl = set_speed(front_right, Param),
-  case timer:apply_interval(Intrvl, motorcontroller, generateTick, [get_pin_map(front_right)]) of
-    {ok, Tref} -> New_trefs = M_trefs#timers{m2 = Tref};
-    {error, badarg} -> New_trefs = M_trefs#timers{m2 = undef}
-  end,
-  New_state = State#state{motor_speeds = New_mspeeds, trefs = New_trefs},
+  New_state = State#state{motor_speeds = New_mspeeds},
   {reply, ok, New_state};
-handle_update(set3, Param, State) ->
-  io:format("updating motor RL speed\r\n"),
+handle_update(rear_left, Param, State) ->
   M_speeds = State#state.motor_speeds,
   New_mspeeds = M_speeds#speeds{m3 = Param},
-  M_trefs = State#state.trefs,
-  cancel_timer(M_trefs#timers.m3),
   Intrvl = set_speed(rear_left, Param),
-  case timer:apply_interval(Intrvl, motorcontroller, generateTick, [get_pin_map(rear_left)]) of
-    {ok, Tref} -> New_trefs = M_trefs#timers{m3 = Tref};
-    {error, badarg} -> New_trefs = M_trefs#timers{m3 = undef}
-  end,
-  New_state = State#state{motor_speeds = New_mspeeds, trefs = New_trefs},
+  New_state = State#state{motor_speeds = New_mspeeds},
   {reply, ok, New_state};
-handle_update(set4, Param, State) ->
-  io:format("updating motor RR speed\r\n"),
+handle_update(rear_right, Param, State) ->
   M_speeds = State#state.motor_speeds,
   New_mspeeds = M_speeds#speeds{m4 = Param},
-  M_trefs = State#state.trefs,
-  cancel_timer(M_trefs#timers.m4),
   Intrvl = set_speed(rear_right, Param),
-  case timer:apply_interval(Intrvl, motorcontroller, generateTick, [get_pin_map(rear_right)]) of
-    {ok, Tref} -> New_trefs = M_trefs#timers{m4 = Tref};
-    {error, badarg} -> New_trefs = M_trefs#timers{m4 = undef}
-  end,
-  New_state = State#state{motor_speeds = New_mspeeds, trefs = New_trefs},
-  {reply, ok, New_state}.
+  New_state = State#state{motor_speeds = New_mspeeds},
+  {reply, ok, New_state};
+handle_update(enable, Param, State) ->
+  enable_all(),
+  {reply, ok, State};
+handle_update(disable, Param, State) ->
+  disable_all(),
+  {reply, ok, State}.
 
-cancel_timer(undef) -> {ok};
-cancel_timer(Tref) -> timer:cancel(Tref), ok.
+set_speed(Motor, 0) ->
+  set_pwm(Motor, 0),
+  ok;
+set_speed(Motor, Speed) when Speed < 0 ->
+  set_direction(Motor, true),
+  Intrvl = -(Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
+  set_pwm(Motor, Intrvl);
+set_speed(Motor, Speed) when Speed > 0 ->
+  set_direction(Motor, true),
+  Intrvl = (Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
+  set_pwm(Motor, Intrvl).
 
-set_speed(Motor, 0) -> io:format("set_speed 0 called\r\n"), -1;
-set_speed(Motor, Speed) when Speed < 0 -> set_direction(Motor, true), -(Speed*(?MAX_TICK_MS-?MIN_TICK_MS)/100)+?MIN_TICK_MS;
-set_speed(Motor, Speed) when Speed > 0 -> set_direction(Motor, false), (Speed*(?MAX_TICK_MS-?MIN_TICK_MS)/100)+?MIN_TICK_MS.
+set_pwm(Motor, 0) ->
+  {PWM, _, _} = get_pin_map(Motor),
+  gen_server:call(pwmController, {set_off, PWM});
+set_pwm(Motor, Period) when Period > 0 ->
+  {PWM, _, _} = get_pin_map(Motor),
+  gen_server:call(pwmController, {set_period, PWM, Period}).
 
-set_direction(Motor, true) -> io:format("motor dir fw\r\n");
-set_direction(Motor, false) -> io:format("motor dir bw\r\n").
+enable_all() ->
+  enable_motor(front_left),
+  enable_motor(rear_left),
+  enable_motor(front_right),
+  enable_motor(rear_right).
+disable_all() ->
+  disable_motor(front_left),
+  disable_motor(rear_left),
+  disable_motor(front_right),
+  disable_motor(rear_right).
+enable_motor(Motor) ->
+  {_, Enable, _} = get_pin_map(Motor),
+  gen_server:call(pwmController, {set_on, Enable}).
+disable_motor(Motor) ->
+  {_, Enable, _} = get_pin_map(Motor),
+  gen_server:call(pwmController, {set_off, Enable}).
 
-generateTick(Pin) ->
-                    case grisp_gpio:get(Pin) of
-                        false -> grisp_gpio:set(Pin);
-                       true -> grisp_gpio:clear(Pin)
-                    end.
+set_direction(front_left, true) ->
+  {_, _, Dir} = get_pin_map(front_left),
+  gen_server:call(pwmController, {set_on, Dir});
+set_direction(front_left, false) ->
+  {_, _, Dir} = get_pin_map(front_left),
+  gen_server:call(pwmController, {set_off, Dir});
+set_direction(rear_left, true) ->
+  {_, _, Dir} = get_pin_map(rear_left),
+  gen_server:call(pwmController, {set_on, Dir});
+set_direction(rear_left, false) ->
+  {_, _, Dir} = get_pin_map(rear_left),
+  gen_server:call(pwmController, {set_off, Dir});
+set_direction(front_right, true) ->
+  {_, _, Dir} = get_pin_map(front_right),
+  gen_server:call(pwmController, {set_off, Dir});
+set_direction(front_right, true) ->
+  {_, _, Dir} = get_pin_map(front_right),
+  gen_server:call(pwmController, {set_on, Dir});
+set_direction(rear_right, true) ->
+  {_, _, Dir} = get_pin_map(rear_right),
+  gen_server:call(pwmController, {set_off, Dir});
+set_direction(rear_right, false) ->
+  {_, _, Dir} = get_pin_map(rear_right),
+  gen_server:call(pwmController, {set_on, Dir}).
 
 setup() ->
-  grisp_gpio:configure(led1_b, output_0),
-  setup(front_right),
-  setup(front_left),
-  setup(rear_left),
-  setup(rear_right).
-setup(Motor) ->
-  grisp_gpio:configure(get_pin_map(Motor), output_0),
   ok.
 
-get_pin_map(front_left) -> led1_r;
-get_pin_map(front_right) -> led1_g;
-get_pin_map(rear_left) -> gpio1_3;
-get_pin_map(rear_right) -> gpio1_4.
+% pwm pin, enable pin, dir pin
+get_pin_map(front_left) -> {0, 4, 5};
+get_pin_map(rear_left) -> {1, 6, 7};
+get_pin_map(front_right) -> {2, 8, 9};
+get_pin_map(rear_right) -> {3, 10, 11}.

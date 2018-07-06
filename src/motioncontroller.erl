@@ -24,7 +24,7 @@ init(_Args) ->
   io:format("motioncontroller started\r\n"),
   {ok, #motionState{}}.
 stop() ->
-  gen_server:cast(motorcontroller, stop).
+  gen_server:cast(motioncontroller, stop).
 handle_call({Request, Param}, _From, State) when is_atom(Request) ->
   handle_update(Request, Param, State);
 handle_call(_Request, _From, State) ->
@@ -33,8 +33,7 @@ handle_call(_Request, _From, State) ->
 handle_cast(stop, State) ->
   {stop, normal, State}.
 terminate(normal, State) ->
-  ok = motorcontroller:stop(),
-  ok.
+  stop().
 
 handle_update(direction, Param, State) ->
   New_state = State#motionState{direction = Param},
@@ -47,6 +46,11 @@ handle_update(speed, Param, State) ->
   {reply, ok, New_state};
 handle_update(stop, Param, State) ->
   New_state = State#motionState{platform_speed = 0, status = idle},
+  gen_server:call(motorcontroller, {disable, 0}),
+  {reply, ok, New_state};
+handle_update(go, Param, State) ->
+  New_state = State#motionState{status = moving},
+  gen_server:call(motorcontroller, {enable, 0}),
   {reply, ok, New_state};
 handle_update(apply, Param, State) ->
   M_new = calc_motorSpeeds(State#motionState.direction, State#motionState.platform_speed),
@@ -64,7 +68,7 @@ calc_motorSpeeds(Direction, Speed)  ->
   {M1, M2, M3, M4}.
 
 set_motors({M1, M2, M3, M4})->
-  gen_server:call(motorcontroller, {set1, M1}),
-  gen_server:call(motorcontroller, {set2, M2}),
-  gen_server:call(motorcontroller, {set3, M3}),
-  gen_server:call(motorcontroller, {set4, M4}).
+  gen_server:call(motorcontroller, {front_left, M1}),
+  gen_server:call(motorcontroller, {rear_left, M2}),
+  gen_server:call(motorcontroller, {front_right, M3}),
+  gen_server:call(motorcontroller, {rear_right, M4}).

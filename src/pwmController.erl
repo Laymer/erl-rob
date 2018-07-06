@@ -36,7 +36,13 @@ execute_call({set_off, Pin}, State)->
   {reply, setOff(Addr, Pin), State};
 execute_call({set_period, Pin, Period_us}, State)->
   #{addr:=Addr} = State,
-  {reply, setPWMPeriod(Addr, Pin, Period_us), State}.
+  {reply, setPWMPeriod(Addr, Pin, Period_us), State};
+execute_call({set_off, Pin}, State)->
+  #{addr:=Addr} = State,
+  {reply, setOff(Addr, Pin), State};
+execute_call({set_on, Pin}, State)->
+  #{addr:=Addr} = State,
+  {reply, setOn(Addr, Pin), State}.
 
 
 writeReg16(Addr, Reg, Data) ->
