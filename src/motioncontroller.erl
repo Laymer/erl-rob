@@ -10,8 +10,10 @@
 -author("Leon Wehmeier").
 %TODO: motion overlay
 -behavior(gen_server).
+
 %% API
 -export([init/1, handle_call/3, handle_cast/2, stop/0]).
+-export([calc_motorSpeeds/2]).
 
 -record(motionState, {
   platform_speed=0.0      :: float(),
@@ -65,7 +67,7 @@ calc_motorSpeeds(Direction, Speed)  ->
   M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4),
   M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4),
   M4 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4),
-  io:format("speeds: ~p~n", {M1, M2, M3, M4}),
+  io:format("speeds: ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
   {M1, M2, M3, M4}.
 
 set_motors({M1, M2, M3, M4})->

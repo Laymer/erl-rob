@@ -8,8 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(motorcontroller).
 -author("Leon Wehmeier").
--define(MIN_TICK_US, 1000).
--define(MAX_TICK_US, 101000).
+-define(MIN_TICK_US, 500).
+-define(MAX_TICK_US, 51000).
 
 -behavior(gen_server).
 %% API
@@ -79,23 +79,24 @@ handle_update(disable, Param, State) ->
   disable_all(),
   {reply, ok, State}.
 
-set_speed(Motor, 0) ->
+set_speed(Motor, Speed) when Speed < 1, Speed > -1 ->
   set_pwm(Motor, 0),
   ok;
 set_speed(Motor, Speed) when Speed < 0 ->
-  set_direction(Motor, true),
-  Intrvl = -(((?MAX_TICK_US-?MIN_TICK_US))-Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
+  set_direction(Motor, false),
+  Intrvl = ?MAX_TICK_US/math:sqrt(-Speed)+?MIN_TICK_US, %(((?MAX_TICK_US-?MIN_TICK_US))+Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
   set_pwm(Motor, round(Intrvl));
-set_speed(Motor, Speed) when Speed > 0 ->
+set_speed(Motor, Speed) when Speed >= 1 ->
   set_direction(Motor, true),
-  Intrvl = ((?MAX_TICK_US-?MIN_TICK_US))-(Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
+  Intrvl = (?MAX_TICK_US/math:sqrt(Speed))-?MIN_TICK_US,
   set_pwm(Motor, round(Intrvl)).
 
 set_pwm(Motor, 0) ->
   {PWM, _, _} = get_pin_map(Motor),
   gen_server:call(pwmController, {set_off, PWM});
-set_pwm(Motor, Period) when Period > 0 ->
+set_pwm(Motor, Value) when Value > 0 ->
   {PWM, _, _} = get_pin_map(Motor),
+  Period = Value,
   gen_server:call(pwmController, {set_period, PWM, Period}).
 
 enable_all() ->

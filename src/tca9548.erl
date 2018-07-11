@@ -23,7 +23,6 @@
 
 init(_Args) ->
   process_flag(trap_exit, true),
-  pca9685:initTCA(16#70),
   {ok, #{init => true, addr=>16#70}}.
 handle_call(Call, _From, State) ->
   try execute_call(Call, State)
@@ -44,18 +43,18 @@ execute_call({disable_channel, Channel}, State)->
   #{addr:=Addr} = State,
   {reply, disable_channel(Addr, Channel), State}.
 
-enableChannel(Addr, Ch) ->
+enable_channel(Addr, Ch) ->
   ChBit = round(math:pow(2, Ch)),
-  <<Active:8>> = readChannel(Addr),
+  <<Active:8>> = read_channel(Addr),
   New = Active bor ChBit,
   grisp_i2c:msgs([Addr, {write, <<New:8>>}]).
-setChannel(Addr, Ch) ->
+set_channel(Addr, Ch) ->
   ChBit = round(math:pow(2, Ch)),
   grisp_i2c:msgs([Addr, {write, <<ChBit:8>>}]).
-disableChannel(Addr, Ch) ->
+disable_channel(Addr, Ch) ->
   ChBit = round(math:pow(2, Ch)),
-  <<Active:8>> = readChannel(Addr),
+  <<Active:8>> = read_channel(Addr),
   New = Active band bnot ChBit,
   grisp_i2c:msgs([Addr, {write, <<New:8>>}]).
-readChannel(Addr) ->
+read_channel(Addr) ->
   grisp_i2c:msgs([Addr, {read, 1, ?I2C_M_RD}]).
