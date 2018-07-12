@@ -23,8 +23,7 @@
 
 init(_Args) ->
   process_flag(trap_exit, true),
-  pca9685:initPCA(16#60),
-  {ok, #{init => true, addr=>16#60}}.
+  {ok, #{init => true}}.
 handle_call(Call, _From, State) ->
   try execute_call(Call, State)
   catch throw:Reason -> {reply, {error, Reason}, State}
@@ -37,17 +36,17 @@ terminate(_Reason, #{slot := Slot}) -> io:format("ina219 termination requested\r
 execute_call({read_distance, Sensor}, State)->
   #{addr:=Addr} = State,
   {reply, read_sensor(Sensor), State}.
-
-read_sensor(Sensor)->
-  pca9685:set_pin(16#60, get_sensor_pin(Sensor), high),
+startSensor(Sensor)->
+  gen_server:call(tca9548, {set_channel, get_sensor_pin(Sensor)}),
   vl6180x:initVL(),
-  vl6180x:startContinous(),
-  timer:sleep(10),
-  Value = vl6180x:readRange(16#60),
-  pca9685:set_pin(16#60, get_sensor_pin(Sensor), low),
-  Value.
+  vl6180x:startContinous().
+read_sensor(Sensor)->
+  gen_server:call(tca9548, {set_channel, get_sensor_pin(Sensor)}),
+  vl6180x:readRange(16#29).
 
-get_sensor_pin(front) -> 0;
-get_sensor_pin(left) -> 1;
-get_sensor_pin(right) -> 2;
-get_sensor_pin(rear) -> 3.
+get_sensor_pin(front_left) -> 0;
+get_sensor_pin(front_left) -> 5;
+get_sensor_pin(right_front) ->1;
+get_sensor_pin(right_rear) -> 2;
+get_sensor_pin(left_front) -> 3;
+get_sensor_pin(left_rear) -> 4.
