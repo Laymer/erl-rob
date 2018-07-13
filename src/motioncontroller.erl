@@ -13,11 +13,11 @@
 
 %% API
 -export([init/1, handle_call/3, handle_cast/2, stop/0]).
--export([calc_motorSpeeds/2]).
+-export([calc_motorSpeeds/3]).
 
 -record(motionState, {
   platform_speed=0.0      :: float(),
-  orientation=0.0         :: float(),
+  theta=0.0         :: float(),
   direction=0.0       :: float(),
   status=idle         ::atom()
 }).
@@ -40,8 +40,8 @@ terminate(normal, State) ->
 handle_update(direction, Param, State) ->
   New_state = State#motionState{direction = Param},
   {reply, ok, New_state};
-handle_update(orientation, Param, State) ->
-  New_state = State#motionState{orientation = Param, status = turning},
+handle_update(theta, Param, State) ->
+  New_state = State#motionState{theta = Param, status = turning},
   {reply, ok, New_state};
 handle_update(speed, Param, State) ->
   New_state = State#motionState{platform_speed = Param},
@@ -55,18 +55,18 @@ handle_update(go, Param, State) ->
   gen_server:call(motorcontroller, {enable, 0}),
   {reply, ok, New_state};
 handle_update(apply, Param, State) ->
-  M_new = calc_motorSpeeds(State#motionState.direction, State#motionState.platform_speed),
+  M_new = calc_motorSpeeds(State#motionState.direction, State#motionState.platform_speed, State#motionState.theta),
   set_motors(M_new),
   New_state = State#motionState{status = moving},
   {reply, ok, New_state};
 handle_update(status, Param, State)->
   {reply, State#motionState.status ,State}.
 
-calc_motorSpeeds(Direction, Speed)  ->
-  M1 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4),
-  M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4),
-  M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4),
-  M4 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4),
+calc_motorSpeeds(Direction, Speed, Theta)  ->
+  M1 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4) - Theta,
+  M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) + Theta,
+  M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) - Theta,
+  M4 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4) + Theta,
   io:format("speeds: ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
   {M1, M2, M3, M4}.
 
