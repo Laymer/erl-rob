@@ -8,8 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(motorcontroller).
 -author("Leon Wehmeier").
--define(MIN_TICK_US, 500).
--define(MAX_TICK_US, 51000).
+-define(MIN_TICK_US, 1000).
+-define(MAX_TICK_US, 100000).
 
 -behavior(gen_server).
 %% API
@@ -84,11 +84,11 @@ set_speed(Motor, Speed) when Speed < 1, Speed > -1 ->
   ok;
 set_speed(Motor, Speed) when Speed < 0 ->
   set_direction(Motor, false),
-  Intrvl = ?MAX_TICK_US/math:sqrt(-Speed)+?MIN_TICK_US, %(((?MAX_TICK_US-?MIN_TICK_US))+Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
+  Intrvl = ?MAX_TICK_US/(-Speed)+?MIN_TICK_US, %(((?MAX_TICK_US-?MIN_TICK_US))+Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
   set_pwm(Motor, round(Intrvl));
 set_speed(Motor, Speed) when Speed >= 1 ->
   set_direction(Motor, true),
-  Intrvl = (?MAX_TICK_US/math:sqrt(Speed))-?MIN_TICK_US,
+  Intrvl = (?MAX_TICK_US/(Speed))-?MIN_TICK_US,
   set_pwm(Motor, round(Intrvl)).
 
 set_pwm(Motor, 0) ->
