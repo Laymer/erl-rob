@@ -46,6 +46,12 @@ handle_update(theta, Param, State) ->
 handle_update(speed, Param, State) ->
   New_state = State#motionState{platform_speed = Param},
   {reply, ok, New_state};
+handle_update(combined, Param, State) ->
+  {Speed, Direction, Theta} = Param,
+  New_state = State#motionState{platform_speed = Speed, direction = Direction, theta = Theta, status = moving},
+  M_new = calc_motorSpeeds(State#motionState.direction, State#motionState.platform_speed, State#motionState.theta),
+  set_motors(M_new),
+  {reply, ok, New_state};
 handle_update(stop, Param, State) ->
   New_state = State#motionState{platform_speed = 0, status = idle},
   gen_server:call(motorcontroller, {disable, 0}),
