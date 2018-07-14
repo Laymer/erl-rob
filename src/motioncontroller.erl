@@ -11,6 +11,9 @@
 %TODO: motion overlay
 -behavior(gen_server).
 
+-define(WHEEL_SEP_LENGTH, 0.2).
+-define(WHEEL_SEP_WIDTH, 0.2).
+-define(WHEEL_R, 0.03).
 %% API
 -export([init/1, handle_call/3, handle_cast/2, stop/0]).
 -export([calc_motorSpeeds/3]).
@@ -52,6 +55,12 @@ handle_update(combined, Param, State) ->
   M_new = calc_motorSpeeds(State#motionState.direction, State#motionState.platform_speed, State#motionState.theta),
   set_motors(M_new),
   {reply, ok, New_state};
+handle_update(xyTheta, Param, State) ->
+  {X, Y, Theta} = Param,
+  M_new = calc_motorSpeeds_xyt(X, Y, Theta),
+  set_motors(M_new),
+  gen_server:call(motorcontroller, {enable, 0}),
+  {reply, ok, State};
 handle_update(stop, Param, State) ->
   New_state = State#motionState{platform_speed = 0, status = idle},
   gen_server:call(motorcontroller, {disable, 0}),
@@ -73,6 +82,14 @@ calc_motorSpeeds(Direction, Speed, Theta)  ->
   M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) + Theta,
   M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) - Theta,
   M4 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4) + Theta,
+  io:format("speeds: ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
+  {M1, M2, M3, M4}.
+
+calc_motorSpeeds_xyt(X, Y, Theta)  -> %in m/s and rad/s
+  M1 = 1/?WHEEL_R*(X-Y-(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % front left
+  M2 = 1/?WHEEL_R*(X+Y-(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % rear left
+  M3 = 1/?WHEEL_R*(X+Y+(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % front right
+  M4 = 1/?WHEEL_R*(X-Y+(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % rear right
   io:format("speeds: ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
   {M1, M2, M3, M4}.
 
