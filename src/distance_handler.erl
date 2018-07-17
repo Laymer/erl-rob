@@ -29,7 +29,7 @@ init(_Args) ->
   io:format("registered~n"),
   {ok, undefined}.
 
-handle_event({gpio2_1, false}, State) ->
+handle_event({gpio1_1, false}, State) ->
   io:format("e-stop triggered by distance sensor array~n"),
   Pins = [front_left, front_right, left_front, left_rear, right_front, right_rear],
   lists:foreach(fun(Pin) ->
