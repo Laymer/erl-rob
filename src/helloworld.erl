@@ -28,14 +28,17 @@ start(_Type, _Args) ->
     {ok, _} = gen_server:start_link({local, tca9548}, tca9548, 16#70, []),
     {ok, _} = gen_server:start_link({local, distance_server}, distance_server, [], []),
     grisp_gpio:configure_slot(gpio1, {input, input, input, input}),
-    distance_handler:register(),
-    %gen_server:cast(motorcontroller, stop),
-    %blink(),
-    %io:format("blink done"),
-    %loop(),
+    %distance_handler:register(), doesn't work, anything that accesses grisp_gpio_events just stalls or doesn't get executed
+    spawn(fun pollDistance/0), % so let's do it ourselves. the gpio_events internally uses a timer to poll the pins anyways
     [grisp_led:flash(L, green, 1000) || L <- [1, 2]],
     {ok, Supervisor}.
-
+pollDistance()->
+    timer:sleep(250),
+    case grisp_gpio:get(gpio1_1) of
+        true -> ok;
+        false -> distance_handler:too_close()
+    end,
+    pollDistance().
 sleepForever()->
     timer:sleep(5000),
     sleepForever().

@@ -6,10 +6,11 @@
 %%% @end
 %%% Created : 17. Jul 2018 10:21
 %%%-------------------------------------------------------------------
+%%%-------------------------------------------------------------------
 -module(distance_handler).
 -author("Leon Wehmeier").
 -behavior(gen_event).
-
+-export([too_close/0]).
 -export([register/0]).
 -export([init/1]).
 -export([handle_event/2]).
@@ -30,15 +31,7 @@ init(_Args) ->
   {ok, undefined}.
 
 handle_event({gpio1_1, false}, State) ->
-  io:format("e-stop triggered by distance sensor array~n"),
-  Pins = [front_left, front_right, left_front, left_rear, right_front, right_rear],
-  lists:foreach(fun(Pin) ->
-                  D = gen_server:call(distance_server, {read_distance, Pin}),
-                  case D of
-                    S when S =< 125 -> io:format("Sensor ~p triggered~n", [Pin]);
-                    S when S > 125 -> ok
-                  end
-                end, Pins),
+  too_close(),
   {ok, State};
 handle_event(Event, State) ->
   io:format("ignoring ~p~n", [Event]),
@@ -49,3 +42,12 @@ handle_info(_Info, State) -> {ok, State}.
 code_change(_OldVsn, State, _Extra) -> State.
 terminate(_Arg, _State) ->
   undefined.
+too_close()->  io:format("e-stop triggered by distance sensor array~n"),
+  Pins = [front_left, front_right, left_front, left_rear, right_front, right_rear],
+  lists:foreach(fun(Pin) ->
+    D = gen_server:call(distance_server, {read_distance, Pin}),
+    case D of
+      S when S =< 125 -> io:format("Sensor ~p triggered~n", [Pin]);
+      S when S > 125 -> ok
+    end
+  end, Pins).
