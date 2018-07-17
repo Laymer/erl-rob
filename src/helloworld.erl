@@ -41,7 +41,7 @@ start(_Type, _Args) ->
     {ok, Supervisor}.
 pollDistance()->
     timer:sleep(250),
-    gen_server:call(motioncontroller, {stop, 4}),
+    %gen_server:call(motioncontroller, {stop, 4}),
     case grisp_gpio:get(gpio1_1) of
         true -> ok;
         false -> distance_handler:too_close()

@@ -40,7 +40,15 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_Reason, _Arg) -> io:format("distance server termination requested\r\n").
 
 execute_call({read_distance, Sensor}, State)->
-  {reply, read_sensor(Sensor), State}.
+  {reply, read_sensor(Sensor), State};
+execute_call({updateInterruptDistance, Distance}, State)->
+  setDistance(front_left, Distance),
+  setDistance(front_right, Distance),
+  setDistance(right_front, Distance),
+  setDistance(right_rear, Distance),
+  setDistance(left_front, Distance),
+  setDistance(left_rear, Distance),
+  {reply, ok, State}.
 startSensor(Sensor)->
   timer:sleep(250),
   gen_server:call(tca9548, {set_channel, get_sensor_pin(Sensor)}),
@@ -50,7 +58,7 @@ startSensor(Sensor)->
   timer:sleep(500), %wait for sensor to initialise. Doesn't work reliably without this delay..
   vl6180x:startContinous(),
   timer:sleep(50),
-  vl6180x:setInterruptThreshold(125),
+  vl6180x:setInterruptThreshold(100),
   timer:sleep(50),
   vl6180x:readRange(16#29),
   timer:sleep(50),
@@ -61,7 +69,11 @@ startSensor(Sensor)->
 read_sensor(Sensor)->
   gen_server:call(tca9548, {set_channel, get_sensor_pin(Sensor)}),
   vl6180x:readRange(16#29).
-
+setDistance(Sensor, Value)->
+  gen_server:call(tca9548, {set_channel, get_sensor_pin(Sensor)}),
+  timer:sleep(50),
+  vl6180x:setInterruptThreshold(Value),
+  timer:sleep(50).
 get_sensor_pin(front_left) -> 6;
 get_sensor_pin(front_right) -> 7;
 get_sensor_pin(left_front) ->3;
