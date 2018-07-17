@@ -17,7 +17,7 @@
 
 start(_Type, _Args) ->
     {ok, Supervisor} = helloworld_sup:start_link(),
-    %sleepForever(),
+    sleepForever(),
     %application:start(grisp),
     %LEDs = [1, 2],
     %[grisp_led:flash(L, red, 250) || L <- LEDs],
@@ -43,7 +43,7 @@ start(_Type, _Args) ->
     %{ok, _} = gen_server:start_link({local, distance_server}, distance_server, [], []),
     grisp_gpio:configure_slot(gpio1, {input, input, input, input}),
     %distance_handler:register(), doesn't work, anything that accesses grisp_gpio_events just stalls or doesn't get executed
-    spawn(fun pollDistance/0), % so let's do it ourselves. the gpio_events internally uses a timer to poll the pins anyways
+    %spawn(fun pollDistance/0), % so let's do it ourselves. the gpio_events internally uses a timer to poll the pins anyways
     [grisp_led:flash(L, green, 1000) || L <- [1, 2]],
     {ok, Supervisor}.
 pollDistance()->

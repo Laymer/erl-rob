@@ -14,7 +14,7 @@
 -behavior(gen_server).
 %% API
 -export([set_speed/2, setup/0, enable_motor/1, disable_motor/1, disable_all/0]).
--export([init/1, handle_call/3, handle_cast/2, stop/0]).
+-export([init/1, handle_call/3, handle_cast/2, stop/0, code_change/3]).
 
 -record(speeds, {
   m1=0            :: non_neg_integer(),
@@ -29,6 +29,7 @@
 
 
 
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
 init(_Args) ->
   setup(),
   {ok, #state{}}.

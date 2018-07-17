@@ -15,7 +15,7 @@
 -define(WHEEL_SEP_WIDTH, 0.2).
 -define(WHEEL_D, 0.188/2). %30mm*pi
 %% API
--export([init/1, handle_call/3, handle_cast/2, stop/0]).
+-export([init/1, handle_call/3, handle_cast/2, stop/0, code_change/3]).
 -export([calc_motorSpeeds/3]).
 
 -record(motionState, {
@@ -25,6 +25,7 @@
   status=idle         ::atom()
 }).
 
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
 init(_Args) ->
   io:format("motioncontroller started\r\n"),
   {ok, #motionState{}}.
