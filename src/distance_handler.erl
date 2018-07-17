@@ -47,7 +47,7 @@ too_close()->  %io:format("e-stop triggered by distance sensor array~n"),
   lists:foreach(fun(Pin) ->
     D = gen_server:call(distance_server, {read_distance, Pin}),
     case D of
-      S when S =< 100 -> io:format("Sensor ~p triggered~n", [Pin]);
-      S when S > 100 -> ok
+      S when S =< 110 -> io:format("Sensor ~p triggered~n", [Pin]);
+      S when S > 110 -> ok
     end
   end, Pins).

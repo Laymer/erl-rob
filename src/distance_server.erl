@@ -58,7 +58,7 @@ startSensor(Sensor)->
   timer:sleep(500), %wait for sensor to initialise. Doesn't work reliably without this delay..
   vl6180x:startContinous(),
   timer:sleep(50),
-  vl6180x:setInterruptThreshold(100),
+  vl6180x:setInterruptThreshold(110),
   timer:sleep(50),
   vl6180x:readRange(16#29),
   timer:sleep(50),
