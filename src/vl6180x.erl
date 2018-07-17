@@ -12,6 +12,8 @@
 -define(SYSRANGE__START, 16#18).
 -define(RESULT__INTERRUPT_STATUS_GPIO, 16#4f).
 -define(RESULT__RANGE_VAL, 16#62).
+-define(SYSRANGE__THRESH_LOW, 16#1A).
+-define(SYSRANGE__THRESH_HIGH, 16#19).
 -define(SYSTEM__INTERRUPT_CLEAR, 16#15).
 -define(SYSRANGE__MAX_CONVERGENCE_TIME, 16#1C).
 -define(INTERLEAVED_MODE__ENABLE , 16#2a3).
@@ -23,6 +25,8 @@
 -define(SYSRANGE__INTERMEASUREMENT_PERIOD , 16#1B).
 -define(SYSALS__INTERMEASUREMENT_PERIOD , 16#3e).
 -define(SYSTEM__INTERRUPT_CONFIG_GPIO , 16#14).
+-define(SYSTEM_MODE_GPIO1 , 16#11).
+-define(RANGE_SCALER, 16#96). %magic, undocumented register
 -define(I2C_SLAVE__DEVICE_ADDRESS , 16#212).
 -define(I2C_M_RD, 16#0001).
 
@@ -35,7 +39,7 @@
 -export([code_change/3]).
 -export([terminate/2]).
 %% API
--export([initVL/0, writeReg8/2, writeReg16/2, readReg8/1, readReg16/1, startRead/0, readRange/1, startContinous/0, setAddr/1]).
+-export([setScaling/1, initVL/0, writeReg8/2, writeReg16/2, readReg8/1, readReg16/1, startRead/0, readRange/1, startContinous/0, setAddr/1, enableGPIO/0, setInterruptThreshold/1]).
 
 
 start_link() -> gen_server:start_link(?MODULE, [], []).
@@ -128,7 +132,7 @@ initVL()-> %magic sequence adopted from adafruit library
   writeReg8(?SYSRANGE__VHV_RECALIBRATE, 16#1),
   writeReg8(?SYSRANGE__INTERMEASUREMENT_PERIOD, 16#09),
   writeReg8(?SYSALS__INTERMEASUREMENT_PERIOD, 16#31),
-  writeReg8(?SYSTEM__INTERRUPT_CONFIG_GPIO, 16#24).
+  writeReg8(?SYSTEM__INTERRUPT_CONFIG_GPIO, 16#01).
 
 startRead()->
   writeReg8(?SYSRANGE__START, 1),
@@ -156,3 +160,12 @@ readRange_single()->
 
 setAddr(NewAddr)->
   writeReg8(?I2C_SLAVE__DEVICE_ADDRESS, NewAddr).
+
+enableGPIO()->
+  writeReg8(?SYSTEM_MODE_GPIO1, 16#10). %polarity:active low, interrupt output
+setInterruptThreshold(Distance)->
+  writeReg8(?SYSRANGE__THRESH_LOW, Distance).
+setScaling(1)->
+  writeReg16(?RANGE_SCALER,253);
+setScaling(2)->
+  writeReg16(?RANGE_SCALER,127).

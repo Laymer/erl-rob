@@ -13,7 +13,7 @@
 
 -behavior(gen_server).
 %% API
--export([set_speed/2, setup/0]).
+-export([set_speed/2, setup/0, enable_motor/1, disable_motor/1, disable_all/0]).
 -export([init/1, handle_call/3, handle_cast/2, stop/0]).
 
 -record(speeds, {
@@ -79,25 +79,32 @@ handle_update(disable, Param, State) ->
   disable_all(),
   {reply, ok, State}.
 
-set_speed(Motor, Speed) when Speed < 1, Speed > -1 ->
+set_speed(Motor, 0.0) ->
   set_pwm(Motor, 0),
   ok;
 set_speed(Motor, Speed) when Speed < 0 ->
   set_direction(Motor, false),
-  Intrvl = ?MAX_TICK_US/(-Speed)+?MIN_TICK_US, %(((?MAX_TICK_US-?MIN_TICK_US))+Speed*(?MAX_TICK_US-?MIN_TICK_US)/100)+?MIN_TICK_US,
-  set_pwm(Motor, round(Intrvl));
-set_speed(Motor, Speed) when Speed >= 1 ->
+  Intrvl = -1000000/(800 * Speed), %800 ticks per wheel rotation -> pulse frequency, 1000000us as base time unit
+  io:format("setting pwm interval to ~p~n", [Intrvl]),
+  set_pwm(Motor, round(Intrvl)); %10us resolution
+set_speed(Motor, Speed) when Speed > 0 ->
   set_direction(Motor, true),
-  Intrvl = (?MAX_TICK_US/(Speed))-?MIN_TICK_US,
+  Intrvl = 1000000/(800 * Speed), %800 ticks per wheel rotation -> pulse frequency, 1000000us as base time unit
+  io:format("setting pwm interval to ~p~n", [Intrvl]),
   set_pwm(Motor, round(Intrvl)).
 
 set_pwm(Motor, 0) ->
   {PWM, _, _} = get_pin_map(Motor),
   gen_server:call(pwmController, {set_off, PWM});
-set_pwm(Motor, Value) when Value > 0 ->
+set_pwm(Motor, Value) when Value > 0, Value < 16#ffff ->
   {PWM, _, _} = get_pin_map(Motor),
   Period = Value,
-  gen_server:call(pwmController, {set_period, PWM, Period}).
+  gen_server:call(pwmController, {set_period, PWM, Period});
+set_pwm(Motor, Value) when Value >= 16#ffff->
+  {PWM, _, _} = get_pin_map(Motor),
+  io:format("Value ~p exceeds max tick interval, stopping motor ~p", [Value, Motor]),
+  gen_server:call(pwmController, {set_off, PWM}).
+
 
 enable_all() ->
   enable_motor(front_left),

@@ -13,7 +13,7 @@
 
 -define(WHEEL_SEP_LENGTH, 0.2).
 -define(WHEEL_SEP_WIDTH, 0.2).
--define(WHEEL_R, 0.03).
+-define(WHEEL_D, 0.188/2). %30mm*pi
 %% API
 -export([init/1, handle_call/3, handle_cast/2, stop/0]).
 -export([calc_motorSpeeds/3]).
@@ -87,11 +87,11 @@ calc_motorSpeeds(Direction, Speed, Theta)  ->
   {M1, M2, M3, M4}.
 
 calc_motorSpeeds_xyt(X, Y, Theta)  -> %in m/s and rad/s
-  M1 = 1/?WHEEL_R*(X-Y-(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % front left
-  M2 = 1/?WHEEL_R*(X+Y-(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % rear left
-  M3 = 1/?WHEEL_R*(X+Y+(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % front right
-  M4 = 1/?WHEEL_R*(X-Y+(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % rear right
-  io:format("speeds: ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
+  M1 = 1/?WHEEL_D*(X-Y-(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % front left
+  M2 = 1/?WHEEL_D*(X+Y-(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % rear left
+  M3 = 1/?WHEEL_D*(X+Y+(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % front right
+  M4 = 1/?WHEEL_D*(X-Y+(?WHEEL_SEP_WIDTH + ?WHEEL_SEP_LENGTH)*Theta), % rear right
+  io:format("speeds (rps): ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
   {M1, M2, M3, M4}.
 
 set_motors({M1, M2, M3, M4})->

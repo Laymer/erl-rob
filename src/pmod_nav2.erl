@@ -32,13 +32,13 @@
 -define(CTRL_REG4, 16#1E).
 
 %Gyro config
--define(ODR_G, 2#101). %data rate 59.5Hz
--define(BW_G, 2#11). %cutoff 16
+-define(ODR_G, 2#101). %data rate 476Hz
+-define(BW_G, 2#11). %cutoff 100 (max)
 -define(FS_G, 2#00). %full-scale:245dps
 -define(INT_SEL, 2#00).
--define(OUT_SEL, 2#10).
+-define(OUT_SEL, 2#00).
 -define(LP_MODE, 2#0).
--define(HP_EN, 2#1).
+-define(HP_EN, 2#0).
 -define(HPCF_G, 2#0100).
 -define(SIGNX_G, 2#0).
 -define(SIGNY_G, 2#0).
