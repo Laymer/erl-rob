@@ -24,6 +24,8 @@ start(_Type, _Args) ->
     %grisp_led:off(2),
     %grisp_led:off(1),
     %timer:sleep(1500),
+    net_kernel:connect_node(?PYNODE),
+    net_kernel:connect_node(?PYNODE),
     {ok, _} = gen_server:start_link({local, pwmController}, pwmController, [], []),
     {ok, _} = gen_server:start_link({local, motorcontroller}, motorcontroller, [], []),
     {ok, _} = gen_server:start_link({local, motioncontroller}, motioncontroller, [], []),
@@ -39,7 +41,7 @@ start(_Type, _Args) ->
     {ok, Supervisor}.
 pollDistance()->
     timer:sleep(250),
-    gen_server:call(motioncontroller, {stop}),
+    gen_server:call(motioncontroller, {stop, 4}),
     case grisp_gpio:get(gpio1_1) of
         true -> ok;
         false -> distance_handler:too_close()
