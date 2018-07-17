@@ -52,9 +52,8 @@ handle_update(speed, Param, State) ->
 handle_update(combined, Param, State) ->
   {Speed, Direction, Theta} = Param,
   New_state = State#motionState{platform_speed = Speed, direction = Direction, theta = Theta, status = moving},
-  M_new = calc_motorSpeeds(Direction, Speed, Theta),
+  M_new = calc_motorSpeeds(State#motionState.direction, State#motionState.platform_speed, State#motionState.theta),
   set_motors(M_new),
-  gen_server:call(motorcontroller, {enable, 0}),
   {reply, ok, New_state};
 handle_update(xyTheta, Param, State) ->
   {X, Y, Theta} = Param,
@@ -80,8 +79,8 @@ handle_update(status, Param, State)->
 
 calc_motorSpeeds(Direction, Speed, Theta)  ->
   M1 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4) - Theta,
-  M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) - Theta,
-  M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) + Theta,
+  M2 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) + Theta,
+  M3 = Speed * math:cos(Direction*math:pi()/180 + math:pi()/4) - Theta,
   M4 = Speed * math:sin(Direction*math:pi()/180 + math:pi()/4) + Theta,
   io:format("speeds: ~p, ~p, ~p, ~p~n", [M1, M2, M3, M4]),
   {M1, M2, M3, M4}.
@@ -95,7 +94,7 @@ calc_motorSpeeds_xyt(X, Y, Theta)  -> %in m/s and rad/s
   {M1, M2, M3, M4}.
 
 set_motors({M1, M2, M3, M4})->
-  gen_server:call(motorcontroller, {front_left, M2}),
-  gen_server:call(motorcontroller, {rear_left, M1}),
-  gen_server:call(motorcontroller, {front_right, M4}),
-  gen_server:call(motorcontroller, {rear_right, M3}).
+  gen_server:call(motorcontroller, {front_left, M1}),
+  gen_server:call(motorcontroller, {rear_left, M2}),
+  gen_server:call(motorcontroller, {front_right, M3}),
+  gen_server:call(motorcontroller, {rear_right, M4}).
