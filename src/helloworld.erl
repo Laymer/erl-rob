@@ -46,7 +46,7 @@ pollDistance()->
         true -> ok;
         false -> distance_handler:too_close()
     end,
-    {?PYPROCESS,?PYNODE} ! {self(), publish, int16, "/platform/e-stop", 1},
+    {?PYPROCESS,?PYNODE} ! {self(), publish, int16, "/platform/e_stop", 1},
     pollDistance().
 sleepForever()->
     timer:sleep(5000),
