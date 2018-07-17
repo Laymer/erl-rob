@@ -27,6 +27,7 @@ start(_Type, _Args) ->
     {ok, _} = gen_server:start_link({local, ina219_40}, ina219, 16#40, []), %nimh monitor %disabled until ina@40 gets replaced
     {ok, _} = gen_server:start_link({local, tca9548}, tca9548, 16#70, []),
     {ok, _} = gen_server:start_link({local, distance_server}, distance_server, [], []),
+    distance_handler:register(),
     %gen_server:cast(motorcontroller, stop),
     %blink(),
     %io:format("blink done"),
