@@ -29,11 +29,18 @@ start(_Type, _Args) ->
     {ok, _} = gen_server:start_link({local, pwmController}, pwmController, [], []),
     {ok, _} = gen_server:start_link({local, motorcontroller}, motorcontroller, [], []),
     {ok, _} = gen_server:start_link({local, motioncontroller}, motioncontroller, [], []),
+    io:format("Started motion controller~n"),
     {ok, _} = gen_server:start_link({local, pmod_nav2}, pmod_nav2, spi1, []),
+    io:format("Started pmod nav~n"),
+    timer:sleep(500),
     {ok, _} = gen_server:start_link({local, ina219_44}, ina219, 16#44, []), %lipo monitor
+    io:format("Started ina219/electronics~n"),
+    timer:sleep(500),
     {ok, _} = gen_server:start_link({local, ina219_40}, ina219, 16#40, []), %nimh monitor %disabled until ina@40 gets replaced
+    io:format("Started ina219 drive~n"),
     {ok, _} = gen_server:start_link({local, tca9548}, tca9548, 16#70, []),
-    {ok, _} = gen_server:start_link({local, distance_server}, distance_server, [], []),
+    io:format("Started tca driver~n"),
+    %{ok, _} = gen_server:start_link({local, distance_server}, distance_server, [], []),
     grisp_gpio:configure_slot(gpio1, {input, input, input, input}),
     %distance_handler:register(), doesn't work, anything that accesses grisp_gpio_events just stalls or doesn't get executed
     spawn(fun pollDistance/0), % so let's do it ourselves. the gpio_events internally uses a timer to poll the pins anyways
