@@ -44,9 +44,9 @@ pollDistance()->
     %gen_server:call(motioncontroller, {stop, 4}),
     case grisp_gpio:get(gpio1_1) of
         true -> ok;
-        false -> distance_handler:too_close()
+        false -> distance_handler:too_close(),
+                {?PYPROCESS,?PYNODE} ! {self(), publish, int16, "/platform/e_stop", 1}
     end,
-    {?PYPROCESS,?PYNODE} ! {self(), publish, int16, "/platform/e_stop", 1},
     pollDistance().
 sleepForever()->
     timer:sleep(5000),
