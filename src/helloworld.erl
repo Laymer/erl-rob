@@ -8,6 +8,11 @@
 -export([start/2]).
 -export([stop/1]).
 
+
+-define(PYNODE, 'py@rpi3').
+-define(GRISPNODE, 'helloworld@grisp_board').
+-define(GRISPPROCESS, grisp_bridge).
+-define(PYPROCESS, pyBridge).
 %--- Callbacks -----------------------------------------------------------------
 
 start(_Type, _Args) ->
@@ -34,10 +39,12 @@ start(_Type, _Args) ->
     {ok, Supervisor}.
 pollDistance()->
     timer:sleep(250),
+    gen_server:call(motioncontroller, {stop}),
     case grisp_gpio:get(gpio1_1) of
         true -> ok;
         false -> distance_handler:too_close()
     end,
+    {?PYPROCESS,?PYNODE} ! {self(), publish, int16, "/platform/e-stop", 1},
     pollDistance().
 sleepForever()->
     timer:sleep(5000),

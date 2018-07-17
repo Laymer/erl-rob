@@ -42,12 +42,12 @@ handle_info(_Info, State) -> {ok, State}.
 code_change(_OldVsn, State, _Extra) -> State.
 terminate(_Arg, _State) ->
   undefined.
-too_close()->  io:format("e-stop triggered by distance sensor array~n"),
+too_close()->  %io:format("e-stop triggered by distance sensor array~n"),
   Pins = [front_left, front_right, left_front, left_rear, right_front, right_rear],
   lists:foreach(fun(Pin) ->
     D = gen_server:call(distance_server, {read_distance, Pin}),
     case D of
-      S when S =< 125 -> io:format("Sensor ~p triggered~n", [Pin]);
-      S when S > 125 -> ok
+      S when S =< 124 -> io:format("Sensor ~p triggered~n", [Pin]);
+      S when S > 124 -> ok
     end
   end, Pins).

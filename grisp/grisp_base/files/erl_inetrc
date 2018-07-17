@@ -1,8 +1,7 @@
 %--- Erlang Inet Configuration -------------------------------------------------
 
 % Add hosts
-{host, {10,0,1,4}, ["X1"]}.
-
+{host, {10,0,1,9}, ["rpi3"]}.
 % Do not monitor the hosts file
 {hosts_file, ""}.
 

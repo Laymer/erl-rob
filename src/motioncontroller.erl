@@ -59,7 +59,7 @@ handle_update(xyTheta, Param, State) ->
   {X, Y, Theta} = Param,
   M_new = calc_motorSpeeds_xyt(X, Y, Theta),
   set_motors(M_new),
-  gen_server:call(motorcontroller, {enable, 0}),
+  %gen_server:call(motorcontroller, {enable, 0}),
   {reply, ok, State};
 handle_update(stop, Param, State) ->
   New_state = State#motionState{platform_speed = 0, status = idle},
