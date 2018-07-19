@@ -104,7 +104,7 @@ set_pwm(Motor, Value) when Value > 0, Value < 16#ffff ->
 set_pwm(Motor, Value) when Value >= 16#ffff->
   {PWM, _, _} = get_pin_map(Motor),
   io:format("Value ~p exceeds max tick interval, stopping motor ~p", [Value, Motor]),
-  gen_server:call(pwmController, {set_off, PWM}).
+  gen_server:call(pwmController, {set_period, 0}).
 
 
 enable_all() ->
